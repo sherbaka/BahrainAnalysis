@@ -1,0 +1,105 @@
+---
+title: "PlotsForBahrain"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r packages}
+##All the packages essential to running my code, there might even be some that I never use, but most of them are needed and they are here:
+library(plyr)
+library(tidyverse)
+library(forcats)
+library(lubridate)
+library(openair)
+library(ggplot2)
+library(zoo)
+library(readr)
+library(scales)
+library(ggthemes)
+library(gridExtra)
+```
+
+
+```{r}
+setwd("~/Desktop/4Years@Reed_2/Summer Research/BahrainAnalysis")
+ManamaFullJoin <- read_csv("R Code/ManamaFullJoin.csv")
+ManamaWeather <- read_csv("R Code/ManamaWeather.csv")
+ManamaPMFull <- read_csv("R Code/ManamaPMFull.csv")
+OAFullJoin <- ManamaFullJoin  %>%
+select(date, ws, wd, RawConc, tempf, relh, visibility, AQI) 
+```
+
+```{r}
+ManamaFullJoinFacet<- ManamaFullJoin%>%
+mutate(dayhour = make_datetime(2020,1,Day, Hour))
+
+
+
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```

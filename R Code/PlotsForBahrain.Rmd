@@ -37,6 +37,16 @@ select(date, ws, wd, RawConc, tempf, relh, visibility, AQI)
 ManamaFullJoinFacet<- ManamaFullJoin%>%
 mutate(dayhour = make_datetime(2020,1,Day, Hour))
 
+##Here is our first plot
+#now lets make the plot
+
+ggplot(data = ManamaFullJoinFacet, 
+       mapping = aes(x = dayhour,
+                     y = RawConc,
+                     fill = Year)) +  geom_line() + facet_wrap(~Month_Name)+
+  labs(title = "Raw Concentration and Time", x = "Months", y = "Raw Concentration (UG/M3)" ) +
+  theme_bw()
+
 
 
 
@@ -44,18 +54,201 @@ mutate(dayhour = make_datetime(2020,1,Day, Hour))
 
 
 ```{r}
+###Taking the daily means
+ManamaFullJoin$Year <- as.numeric(ManamaFullJoin$Year)
+AVGManamaBaseline <- timeAverage(ManamaFullJoin, avg.time = "day")
 
+AVGManamaBaseline<- AVGManamaBaseline%>%
+ mutate(
+   Month_Name = case_when(
+      Month == '1' ~ "Jan",
+      Month == '2' ~ "Feb",
+      Month == '3' ~ "Mar",
+      Month == '4' ~ "Apr",
+      Month == '5' ~ "May",
+      Month == '6' ~ "Jun",
+      Month == '7' ~ "Jul",
+      Month == '8' ~ "Aug",
+      Month == '9' ~ "Sep",
+      Month == '10' ~ "Oct",
+      Month == '11' ~ "Nov",
+      Month == '12' ~ "Dec" ) )%>%
+  mutate(Month_Name = factor(Month_Name))%>%
+  
+ 
+    mutate(
+    YearName = case_when(
+      Year =='2016' ~ "2016",
+      Year == '2017'~ "2017",
+      Year == '2018'~ "2018",
+      Year == '2019'~ "2019",
+      Year == '2020'~ "2020"))
+AVGManamaBaseline$YearName <- as.factor(AVGManamaBaseline$YearName)
+ AVGManamaBaseline$Month_Name <- fct_reorder(AVGManamaBaseline$Month_Name, 
+                                          AVGManamaBaseline$Month, 
+                                          min)
+##Now comes our boxplot
+ggplot(data = AVGManamaBaseline, 
+       mapping = aes(x = Month_Name,
+                     y = RawConc,
+                      fill = YearName)) +  geom_boxplot()+
+  labs(title = "Raw Concentration and Time", x = "Months", y = "Raw Concentration (UG/M3)", fill = "Year")+ theme_bw()
 ```
 
 
 ```{r}
+##Now lets take avgs from 2017-2019 and then compare it with the 2020 data. 
+##here is the chunk for 2020, less needs to be done here.
+ManamaFullJoin2020 <-ManamaFullJoin%>%
+filter (Year == 2020)
+ManamaFullJoin2020$tempf <- as.numeric(ManamaFullJoin2020$tempf)
+ManamaFullJoin2020$YearName <- as.factor(ManamaFullJoin2020$YearName)
+##Here is the first chunk
+ManamaFullJoin20172019 <-ManamaFullJoin%>%
+filter (Year != 2020)%>%
+  mutate(date = make_datetime(2020,Month,Day, Hour))
+ManamaFullJoin20172019$date <- as.POSIXct(ManamaFullJoin20172019$date, format = '2019-%m-%d')
+ManamaFullJoin20172019$tempf <- as.numeric(ManamaFullJoin20172019$tempf)
+ManamaFullJoin20172019 <- aggregate(cbind(ws,RawConc, visibility, wd, relh,tempf, AQI, Month, Day, Hour ) ~ (date), data=ManamaFullJoin20172019, FUN=mean)
 
+ManamaFullJoin20172019$Year <- 2019
+  
+ManamaFullJoin20172019 <- ManamaFullJoin20172019 %>%
+  filter (date <= as.Date("2020-12-15"))%>% ##change if updated dates
+##Lets add Month_Name and YearName back in.
+  mutate(
+   Month_Name = case_when(
+      Month == '1' ~ "January",
+      Month == '2' ~ "February",
+      Month == '3' ~ "March",
+      Month == '4' ~ "April",
+      Month == '5' ~ "May",
+      Month == '6' ~ "June",
+      Month == '7' ~ "July",
+      Month == '8' ~ "August",
+      Month == '9' ~ "September",
+      Month == '10' ~ "October",
+      Month == '11' ~ "November",
+      Month == '12' ~ "December" ) )%>%
+  mutate(Month_Name = factor(Month_Name))%>%
+    mutate(
+    YearName = case_when(
+      Year =='2016' ~ "2016",
+      Year == '2017'~ "2017",
+      Year == '2018'~ "2018",
+      Year == '2019'~ "2019",
+      Year == '2020'~ "2020"))
+ManamaFullJoin20172019$YearName <- as.factor(ManamaFullJoin20172019$YearName)
+
+ManamaBaseline=full_join(ManamaFullJoin20172019,ManamaFullJoin2020,by=c("ws","RawConc", "visibility", "wd", "relh", "tempf", "AQI", "Month", "Day", "Hour", "date", "Year", "YearName", "Month_Name"))
+  
+
+
+
+AVGManamaBaseline <- timeAverage(ManamaBaseline, avg.time = "day")
+##We have to add Month_Name and YearName back in again, oy vey
+AVGManamaBaseline<- AVGManamaBaseline%>%
+ mutate(
+   Month_Name = case_when(
+      Month == '1' ~ "January",
+      Month == '2' ~ "February",
+      Month == '3' ~ "March",
+      Month == '4' ~ "April",
+      Month == '5' ~ "May",
+      Month == '6' ~ "June",
+      Month == '7' ~ "July",
+      Month == '8' ~ "August",
+      Month == '9' ~ "September",
+      Month == '10' ~ "October",
+      Month == '11' ~ "November",
+      Month == '12' ~ "December" ) )%>%
+  mutate(Month_Name = factor(Month_Name))%>%
+    mutate(
+    YearName = case_when(
+      Year =='2016' ~ "2016",
+      Year == '2017'~ "2017",
+      Year == '2018'~ "2018",
+      Year == '2019'~ "2019",
+      Year == '2020'~ "2020"))
+AVGManamaBaseline$YearName <- as.factor(AVGManamaBaseline$YearName)
+
+
+AVGManamaFullJoin20172019 <- timeAverage(ManamaFullJoin20172019, avg.time = "day")
+ManamaFullJoin20172019<- ManamaFullJoin20172019%>%
+ mutate(
+   Month_Name = case_when(
+      Month == '1' ~ "January",
+      Month == '2' ~ "February",
+      Month == '3' ~ "March",
+      Month == '4' ~ "April",
+      Month == '5' ~ "May",
+      Month == '6' ~ "June",
+      Month == '7' ~ "July",
+      Month == '8' ~ "August",
+      Month == '9' ~ "September",
+      Month == '10' ~ "October",
+      Month == '11' ~ "November",
+      Month == '12' ~ "December" ) )%>%
+  mutate(Month_Name = factor(Month_Name))%>%
+  
+ 
+    mutate(
+    YearName = case_when(
+      Year =='2016' ~ "2016",
+      Year == '2017'~ "2017",
+      Year == '2018'~ "2018",
+      Year == '2019'~ "2019",
+      Year == '2020'~ "2020"))
+ManamaFullJoin20172019$YearName <- as.factor(ManamaFullJoin20172019$YearName)
+ ManamaFullJoin20172019$Month_Name <- fct_reorder(ManamaFullJoin20172019$Month_Name, 
+                                          ManamaFullJoin20172019$Month, 
+                                          min)
+ AVGManamaFullJoin2020 <- timeAverage(ManamaFullJoin2020, avg.time = "day")
+ManamaFullJoin2020<- ManamaFullJoin2020%>%
+ mutate(
+   Month_Name = case_when(
+      Month == '1' ~ "January",
+      Month == '2' ~ "February",
+      Month == '3' ~ "March",
+      Month == '4' ~ "April",
+      Month == '5' ~ "May",
+      Month == '6' ~ "June",
+      Month == '7' ~ "July",
+      Month == '8' ~ "August",
+      Month == '9' ~ "September",
+      Month == '10' ~ "October",
+      Month == '11' ~ "November",
+      Month == '12' ~ "December" ) )%>%
+  mutate(Month_Name = factor(Month_Name))%>%
+  
+ 
+    mutate(
+    YearName = case_when(
+      Year =='2016' ~ "2016",
+      Year == '2017'~ "2017",
+      Year == '2018'~ "2018",
+      Year == '2019'~ "2019",
+      Year == '2020'~ "2020"))
+ManamaFullJoin2020$YearName <- as.factor(ManamaFullJoin2020$YearName)
+ ManamaFullJoin2020$Month_Name <- fct_reorder(ManamaFullJoin2020$Month_Name, 
+                                          ManamaFullJoin2020$Month, 
+                                          min)
 ```
 
 
 ```{r}
+timePlot(selectByDate(OAFullJoin, year = 2016:2019),
+         pollutant = c("RawConc"),
+         avg.time = "day" ,
+     main = "Time Series for Raw Concentration with Daily Averages from 2017-2019", fontsize = 10, xlab= "Date")
 
+  timePlot(OAFullJoin, 
+         pollutant = c("RawConc", "relh"),
+          cols = "jet",
+       y.relation = "free", avg.time = "day", 
+       main = "Time Series for Relative Humidity and Raw Concentration with Daily Averages", (fontsize = 10))
 ```
+
 
 
 ```{r}
